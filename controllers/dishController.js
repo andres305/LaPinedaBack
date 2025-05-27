@@ -1,13 +1,18 @@
 exports.createDish = async (req, res) => {
     try {
-        const { name, description, price, image } = req.body;
+        const { name, description, price, visible } = req.body;
         const { categoryId } = req.params;
 
-        if (!name || !description || !price || !image) {
-            return res.status(400).send('Todos los campos son obligatorios: name, description, price, image');
+        if (!name || price === undefined || price === null) {
+            return res.status(400).send('Todos los campos son obligatorios: name, price');
         }
 
-        const newDish = { name, description, price, image };
+        const newDish = {
+            name,
+            description,
+            price,
+            visible: visible ?? true
+        };
 
         const dishRef = await req.db
             .collection('categories')
@@ -21,19 +26,22 @@ exports.createDish = async (req, res) => {
     }
 };
 
+
 exports.getAllDishes = async (req, res) => {
     try {
-        const { categoryId } = req.params;
-        const snapshot = await req.db.collection('categories')
-            .doc(categoryId)
-            .collection('dishes')
-            .get();
-        const dishes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        res.send(dishes);
-    } catch (err) {
-        res.status(500).send(err.message);
+        const snapshot = await req.db.collectionGroup('dishes').get();
+        const dishes = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            categoryId: doc.ref.parent.parent.id
+        }));
+        res.status(200).json(dishes);
+    } catch (error) {
+        console.error('Error al obtener los platos:', error);
+        res.status(500).json({ error: 'Error al obtener los platos' });
     }
 };
+
 
 exports.getDishById = async (req, res) => {
     try {

@@ -38,9 +38,32 @@ exports.updateCategory = async (req, res) => {
 
 exports.deleteCategory = async (req, res) => {
     try {
-        await req.db.collection('categories').doc(req.params.id).delete();
-        res.send('Categoría eliminada');
+        const { id } = req.params;
+
+        if (!id) return res.status(400).send('Falta id');
+
+        const categoryRef = req.db.collection('categories').doc(id);
+
+        // Verifica que la categoría exista
+        const categoryDoc = await categoryRef.get();
+        if (!categoryDoc.exists) {
+            return res.status(404).send('Categoría no encontrada');
+        }
+
+        // Elimina todos los documentos de dishes con get() + forEach()
+        const dishesSnapshot = await categoryRef.collection('dishes').get();
+        const batch = req.db.batch();
+        dishesSnapshot.forEach(doc => batch.delete(doc.ref));
+        if (!dishesSnapshot.empty) {
+            await batch.commit();
+        }
+
+        // Elimina la categoría
+        await categoryRef.delete();
+
+        res.send('Categoría y sus platos eliminados correctamente');
     } catch (err) {
-        res.status(500).send(err.message);
+        console.error('Error al eliminar categoría:', err);
+        res.status(500).send('Error al eliminar categoría');
     }
 };
