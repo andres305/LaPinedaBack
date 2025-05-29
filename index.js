@@ -14,7 +14,7 @@ const verifyToken = require('./middleware/authMiddleware');
 const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const dishRoutes = require('./routes/dishRoutes');
-const adminRoutes = require('./routes/adminRoutes'); // ⬅️ si tienes un adminRoutes.js
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
